@@ -154,9 +154,6 @@ class User(Base):
     phone_num = Column(String(11))
     password = Column(String(256))
     invited_user_id = Column(Integer)
-    user_id = Column(ForeignKey('user_ditail.id'), unique=True)
-
-    user = relationship('UserDitail', primaryjoin='User.user_id == UserDitail.id', backref='users')
 
 
 class UserAccount(Base):
@@ -191,6 +188,9 @@ class UserDitail(Base):
     identity_status = Column(Integer)
     risk_rank = Column(String(20))
     phone_num = Column(String(11))
+    user_id = Column(ForeignKey('user.id'), unique=True)
+
+    user_ditail = relationship('User', primaryjoin='UserDitail.user_id == User.id', backref='user_ditails')
 
 
 class UserProduct(Base):
