@@ -20,15 +20,13 @@ class BandCard(Base):
     __tablename__ = 'band_card'
 
     id = Column(Integer, primary_key=True)
-    id_card = Column(String(18))
+    user_id = Column(ForeignKey('user.id'), index=True)
+    id_card = Column(String(20))
+    card_type = Column(String(50))
     bank_name = Column(String(256))
-    bank_user_name = Column(String(20))
-    trade_pwd = Column(String(256))
-    balance = Column(Float)
-    reserve_phonenum = Column(String(11))
-    user_id = Column(ForeignKey('user_ditail.id'), index=True)
+    logo_href = Column(String(50))
 
-    user = relationship('UserDitail', primaryjoin='BandCard.user_id == UserDitail.id', backref='band_cards')
+    user = relationship('User', primaryjoin='BandCard.user_id == User.id', backref='band_cards')
 
 
 class BankProduct(Base):
@@ -77,9 +75,10 @@ class Information(Base):
     information_name = Column(String(256))
     release_time = Column(String(20))
     read_count = Column(Integer)
-    detail_url = Column(Text)
     image_url = Column(String(256))
     abstract = Column(String(256))
+    info_class = Column(String(20))
+    detail = Column(Text)
 
 
 class OptionScore(Base):
@@ -102,8 +101,18 @@ class ProductClas(Base):
     pro_balance = Column(Float)
     produce = Column(Text)
     is_novice = Column(Integer)
+    risk_level = Column(String(20))
+    paid_count = Column(Integer)
 
     bank = relationship('Future', primaryjoin='ProductClas.bank_id == Future.id', backref='product_class')
+
+
+class Question(Base):
+    __tablename__ = 'question'
+
+    id = Column(Integer, primary_key=True)
+    Q_name = Column(Text)
+    answer = Column(Text)
 
 
 class ReadLog(Base):
@@ -111,7 +120,7 @@ class ReadLog(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(ForeignKey('user.id'), index=True)
-    read_date = Column(String(20))
+    read_date = Column(DateTime, nullable=False, server_default=FetchedValue())
     info_id = Column(ForeignKey('information.id'), index=True)
 
     info = relationship('Information', primaryjoin='ReadLog.info_id == Information.id', backref='read_logs')
@@ -174,6 +183,8 @@ class UserBalanceFinance(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(ForeignKey('user.id'), unique=True)
     paid_money = Column(Float)
+    income = Column(Float, nullable=False, server_default=FetchedValue())
+    paid_date = Column(Float, nullable=False)
 
     user = relationship('User', primaryjoin='UserBalanceFinance.user_id == User.id', backref='user_balance_finances')
 
@@ -188,9 +199,9 @@ class UserDitail(Base):
     identity_status = Column(Integer)
     risk_rank = Column(String(20))
     phone_num = Column(String(11))
-    user_id = Column(ForeignKey('user.id'), unique=True)
+    user_id = Column(ForeignKey('user.id'), index=True)
 
-    user_ditail = relationship('User', primaryjoin='UserDitail.user_id == User.id', backref='user_ditails')
+    user = relationship('User', primaryjoin='UserDitail.user_id == User.id', backref='user_ditails')
 
 
 class UserProduct(Base):
@@ -213,7 +224,7 @@ class UserTradeDetail(Base):
     user_id = Column(ForeignKey('user.id'), unique=True)
     behavior = Column(String(20))
     trade_money = Column(Float)
-    trade_time = Column(String(20))
+    trade_time = Column(DateTime, nullable=False, server_default=FetchedValue())
 
     user = relationship('User', primaryjoin='UserTradeDetail.user_id == User.id', backref='user_trade_details')
 
