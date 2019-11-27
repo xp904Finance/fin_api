@@ -10,13 +10,15 @@ from common.trade_log import insert_detail
 from db import session
 from mainapp.models import Information, User, ReadLog, UserBalanceFinance, BalanceFinancing
 
-phone_payment_blue = Blueprint("phone_payment_blue", __name__)
+phone_payment_blue = Blueprint("payment_blue", __name__)
 
 
 @phone_payment_blue.route("/phone/", methods=("GET",))
-def phone_payment_api():
+def phone_payment():
     user_phone = request.args.get("phone")
+    print(user_phone)
     user = session.query(User).filter_by(phone_num=user_phone).first()
+
     user_recharge = user.recharge_logs
     if user_recharge:  # 如果充过返回上次充值的手机号
         return jsonify({
@@ -24,6 +26,7 @@ def phone_payment_api():
         })
 
     # 如果没充过返回自己的手机号
+    print(11111)
     return jsonify({
         "phone": user_phone
     })
@@ -42,12 +45,21 @@ def phone_payment_api():
         if user_balance >= pay_money:
             # 用户余额大于等于要充值的钱数，执行充值功能
             user.user_accounts[0].user_balance -= pay_money  # 修改用户余额
-            insert_detail(user.id, "手机充值", pay_money)  # 添加充值记录
+            insert_detail(user.id, "手机充值", -pay_money)  # 添加充值记录
             session.commit()  # 提交数据库
+            return jsonify({
+                "status": 0,
+                "msg": f"{pay_phone}充值成功^-^"
+            })
+        else:
+            return jsonify({
+                "status": 1,
+                "msg": "充值失败！用户余额不足！"
+            })
     else:
         return jsonify({
-            "status": 1,
-            "msg": "用户余额不足！"
+            "status": 2,
+            "msg": "充值失败！用户余额不足！"
         })
 
 

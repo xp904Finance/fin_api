@@ -1,6 +1,5 @@
 from redis import Redis
 
-# 用户登录状态token
 rd1 = Redis(host='49.235.55.221', db=1, password='123456', decode_responses=True)
 
 # rd2用来存储临时验证用的手机号和验证码

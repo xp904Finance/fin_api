@@ -143,7 +143,8 @@ class RiskLevel(Base):
 
     id = Column(Integer, primary_key=True)
     f_level = Column(String(10))
-    user_vount = Column(Integer)
+    user_count = Column(Integer)
+    low_score = Column(Integer)
 
 
 class SysUser(Base):
@@ -181,27 +182,26 @@ class UserBalanceFinance(Base):
     __tablename__ = 'user_balance_finance'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey('user.id'), unique=True)
+    user_id = Column(ForeignKey('user.id'), index=True)
     paid_money = Column(Float)
-    income = Column(Float, nullable=False, server_default=FetchedValue())
-    paid_date = Column(Float, nullable=False)
+    income = Column(Float)
+    paid_date = Column(DateTime, nullable=False, server_default=FetchedValue())
 
     user = relationship('User', primaryjoin='UserBalanceFinance.user_id == User.id', backref='user_balance_finances')
 
 
-class UserDitail(Base):
-    __tablename__ = 'user_ditail'
+class UserDetail(Base):
+    __tablename__ = 'user_detail'
 
     id = Column(Integer, primary_key=True)
     username = Column(String(20))
     portrait = Column(String(256))
     address = Column(String(256))
-    identity_status = Column(Integer)
     risk_rank = Column(String(20))
-    phone_num = Column(String(11))
+    zip_code = Column(String(6))
     user_id = Column(ForeignKey('user.id'), index=True)
 
-    user = relationship('User', primaryjoin='UserDitail.user_id == User.id', backref='user_ditails')
+    user = relationship('User', primaryjoin='UserDetail.user_id == User.id', backref='user_details')
 
 
 class UserProduct(Base):
@@ -221,7 +221,7 @@ class UserTradeDetail(Base):
     __tablename__ = 'user_trade_detail'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey('user.id'), unique=True)
+    user_id = Column(ForeignKey('user.id'), index=True)
     behavior = Column(String(20))
     trade_money = Column(Float)
     trade_time = Column(DateTime, nullable=False, server_default=FetchedValue())

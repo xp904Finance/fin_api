@@ -4,7 +4,7 @@
 from unittest import TestCase
 import requests
 
-base_url = 'http://localhost:5000/user/'
+base_url = 'http://localhost:8080/info/'
 
 
 class TestAppUser(TestCase):
@@ -18,7 +18,7 @@ class TestAppUser(TestCase):
         url = base_url + 'user_read/'
         data = {
             "user_phone": 11111111111,
-            'info_id': 2
+            'info_id': 530
         }
         resp = requests.post(url, json=data)
         print(resp)
