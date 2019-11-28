@@ -15,7 +15,7 @@ def my_account():
     print(phone)
     try:
         user = session.query(User).filter_by(phone_num=phone).first()
-        print("---->", user)
+        print("---->",user)
         user_id = user.id
         ua = session.query(UserAccount).filter_by(user_id=user_id).first()
         ud = session.query(UserDetail).filter_by(user_id=user_id).first()
@@ -38,8 +38,7 @@ def my_account():
             "user_name": user_name,
             "u_account_money": u_account_money,
             "user_money": ua.user_balance,
-            "income": income,
-            "user_portrait": ud.portrait
+            "income": income
         })
 
     except Exception as e:

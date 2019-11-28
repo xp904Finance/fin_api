@@ -38,28 +38,39 @@ def phone_payment_api():
     user_phone = post_data["phone"]
     pay_phone = post_data["pay_phone"]  # 要充值的手机号
     pay_money = post_data["pay_money"]  # 要充值的钱数
-
-    user = session.query(User).filter_by(phone_num=user_phone).first()
-    if user.user_accounts:
-        user_balance = user.user_accounts[0].user_balance
-        if user_balance >= pay_money:
-            # 用户余额大于等于要充值的钱数，执行充值功能
-            user.user_accounts[0].user_balance -= pay_money  # 修改用户余额
-            insert_detail(user.id, "手机充值", -pay_money)  # 添加充值记录
-            session.commit()  # 提交数据库
+    way = post_data["way"]  # 通过什么充值
+    try:
+        user = session.query(User).filter_by(phone_num=user_phone).first()
+        if "余额"in way:
+            user_balance = user.user_accounts[0].user_balance
+            if user_balance >= pay_money:
+                # 用户余额大于等于要充值的钱数，执行充值功能
+                user.user_accounts[0].user_balance -= pay_money  # 修改用户余额
+                insert_detail(user.id, "手机充值", -pay_money)  # 添加充值记录
+                session.commit()  # 提交数据库
+                return jsonify({
+                    "status": 0,
+                    "msg": f"{pay_phone}充值成功^-^"
+                })
+            else:
+                return jsonify({
+                    "status": 1,
+                    "msg": "充值失败！用户余额不足！"
+                })
+        elif "银行" in way:
             return jsonify({
                 "status": 0,
-                "msg": f"{pay_phone}充值成功^-^"
+                "msg": "充值失败！用户余额不足！"
             })
         else:
             return jsonify({
-                "status": 1,
-                "msg": "充值失败！用户余额不足！"
+                "status": 3,
+                "msg": "没有此功能！"
             })
-    else:
+    except:
         return jsonify({
-            "status": 2,
-            "msg": "充值失败！用户余额不足！"
+            "status": 3,
+            "msg": "查无此用户！"
         })
 
 

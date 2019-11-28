@@ -182,10 +182,10 @@ class UserBalanceFinance(Base):
     __tablename__ = 'user_balance_finance'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey('user.id'), index=True)
+    user_id = Column(ForeignKey('user.id'), unique=True)
     paid_money = Column(Float)
-    income = Column(Float)
-    paid_date = Column(DateTime, nullable=False, server_default=FetchedValue())
+    income = Column(Float, nullable=False, server_default=FetchedValue())
+    paid_date = Column(Float, nullable=False)
 
     user = relationship('User', primaryjoin='UserBalanceFinance.user_id == User.id', backref='user_balance_finances')
 
@@ -233,7 +233,7 @@ class UserVipPackage(Base):
     __tablename__ = 'user_vip_package'
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey('user.id'), unique=True)
+    user_id = Column(ForeignKey('user.id'), index=True)
     vip_name = Column(String(20))
     expires_time = Column(DateTime)
     receive_date = Column(DateTime, nullable=False, server_default=FetchedValue())

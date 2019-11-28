@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 # coding: utf-8
+import time
+
 from flask import Blueprint, request
 from flask import jsonify
 from sqlalchemy.orm import Query
@@ -25,7 +27,8 @@ def login():
         phone_num, pwd = req_data['name'], req_data['pwd']
         if len(pwd.strip()) == 0:
             raise Exception('')
-    except:
+    except Exception as e:
+        print(e)
         return jsonify({
             'status': 1,
             'msg': '请求参数不完整，请提供name和pwd的json格式的参数'
@@ -41,7 +44,7 @@ def login():
         login_user: User = query.first()
         if encode4md5(pwd) == login_user.password:
             token = new_token()
-            add_token(phone_num,token)
+            add_token(phone_num, token)
             # 将token存在redis缓存中
             details = login_user.user_accounts
             for detail in details:
@@ -52,7 +55,7 @@ def login():
                 'status': 0,
                 'msg': '登录成功',
                 'token': token,
-                'money':money_dict,
+                'money': money_dict,
                 'data': {
                     'phone_num': login_user.phone_num,
                 },
@@ -78,16 +81,16 @@ def send_code():
         if flag == "注册":
             if query.count() != 0:
                 return jsonify({
-                    "status":1,
-                    "msg":"该用户已存在"
+                    "status": 1,
+                    "msg": "该用户已存在"
                 })
             else:
                 sms_.send_code(phone)
         if flag == "忘记密码":
             if query.count() == 0:
                 return jsonify({
-                    "status":1,
-                    "msg":"该用户不存在"
+                    "status" : 1,
+                    "msg" : "该用户不存在"
                 })
             else:
                 sms_.send_code(phone)
@@ -262,43 +265,54 @@ def resetpwd():
 @user_blue.route('cashbookinfo/',methods=('POST',))
 def book():
     data = request.get_json()
-    phone,year,month  = data["phone"],int(data["year"]),int(data["month"])
-    #接收月份年份 算出一个月的支付
-    #返还这个月的支出和收入   返还本月每一天的日期 支出和收入 以及当天明细
+    phone,year,month  = data["phone"],data["year"],data["month"]
     query: Query = db.session.query(User).filter(User.phone_num == phone)
     now_user: User = query.first()
-    details = now_user.user_trade_details
-    details_list = []
+    user_id = now_user.id
+    details = db.session.execute("select * from user_trade_detail where user_id={} and trade_time like '{}-{}%'".format(user_id,year,month))
+    details = details.fetchall()
+    date_dict = {}
+    for d in details:
+        date_dict[d.trade_time.day] = []
     mon_money_jia = 0
     mon_money_pay = 0
-    for detail in details:
-        t = detail.trade_time
-        print(t)
-        year1 = t.year
-        month1 = t.month
-        print(year1)
-        print(month1)
-        if year == year1 and month == month1:
-            print(detail.trade_money)
-            if detail.trade_money > 0:
-                mon_money_jia += detail.trade_money
-            if detail.trade_money < 0:
-                mon_money_pay += detail.trade_money
-            detail_dict = {
-                    "day":detail.trade_time.day,
-                    "behavior": detail.behavior,
-                    "trade_money":detail.trade_money,
-                    "week":detail.trade_time.strftime('%w'),
-                }
-            details_list.append(detail_dict)
-    print(details_list)
+
+    for d in details:
+        if d.trade_money > 0:
+            mon_money_jia += d.trade_money
+        else:
+            mon_money_pay += d.trade_money
+        d_dict = {}
+        print(d)
+        d_dict["behavior"] = d.behavior
+        d_dict["week"] = d.trade_time.strftime('%w')
+        d_dict["trade_money"] = d.trade_money
+        date_dict[d.trade_time.day].append(d_dict)
+    dict2 = {}
+
+    for i in date_dict:
+        list1 = date_dict[i]
+        day_money_jia = 0
+        day_money_pay = 0
+        list2 = []
+        for j in list1:
+            if j["trade_money"] > 0:
+                day_money_jia += j["trade_money"]
+            else:
+                day_money_pay += j["trade_money"]
+        list2.append(day_money_pay)
+        list2.append(day_money_jia)
+        dict2[i] = list2
+    list3 = [date_dict,dict2]
     return jsonify({
-        'status': 0,
-        'msg': '发送成功',
-        'data': details_list,
-        'mon_money_jia':mon_money_jia,
-        'mon_money_pay':mon_money_pay
+        # "date_dict":date_dict,
+        "data":list3,
+        "mon_money_jia":mon_money_jia,
+        "mon_money_pay":mon_money_pay,
+        # "day_money":dict2
     })
+
+
 @user_blue.route('/vip/',methods=('GET',))
 def vip():
     vips = db.session.query(VipActivity).all()
@@ -342,3 +356,4 @@ def youhuiquan():
         'msg': '获取优惠券成功',
         'data':list1,
     })
+# dd = db.session.execute(f"-- select * from user_trade_detail where user_id={user_id} and trade_time like '2019-11%'")
